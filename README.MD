@@ -5,7 +5,7 @@
 
 ### Backend
 
-- ❌ Create a Mocking module with endpoint to get 100 products
+- ✅ Create a Mocking module with endpoint to get 100 products (localhost:8080/mock/products/)
 
 ### Frontend
 

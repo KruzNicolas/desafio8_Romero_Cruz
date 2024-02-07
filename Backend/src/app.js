@@ -13,6 +13,7 @@ import chatModel from "../src/models/message.models.js";
 import chatRouter from "./routes/chat.routes.js";
 import sessionRouter from "./routes/session.routes.js";
 import viewsRouter from "./routes/views.routes.js";
+import mocksRouter from "./mocks/productsMocks.js";
 import MongoSingleton from "./services/mongo.singleton.js";
 
 import config from "./config.js";
@@ -58,6 +59,7 @@ try {
   app.use("/api/products", productsRouter);
   app.use("/api/carts", cartsRouter);
   app.use("/api/sessions", sessionRouter);
+  app.use("/mock", mocksRouter);
 
   // Chat Endpoint
   app.use("/", chatRouter);
