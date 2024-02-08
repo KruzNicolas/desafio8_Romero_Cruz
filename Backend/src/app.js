@@ -77,6 +77,12 @@ try {
     console.log(`Express server active on port ${config.PORT}`);
   });
 
+  app.use((err, req, res, next) => {
+    const code = err.code || 500;
+    const message = err.message || "Internal error";
+    return res.status(code).send({ status: "ERR", data: message });
+  });
+
   // WebSocket things
   const io = new Server(httpServer, {
     cors: {

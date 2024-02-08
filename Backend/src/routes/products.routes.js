@@ -1,7 +1,7 @@
 import { Router } from "express";
-import productsModel from "../models/products.models.js";
 import { ProductService } from "../services/products.mongo.dao.js";
-
+import CustomError from "../services/error.custom.class.js";
+import errorDictionary from "../services/error.dictionary.js";
 import { handlePolicies } from "../utils.js";
 
 const router = Router();
@@ -66,46 +66,50 @@ router.get("/all", async (req, res) => {
   }
 });
 
-router.get("/:pid", async (req, res) => {
-  try {
-    const pId = req.params.pid;
-    const product = await controller.getProduct(pId);
+router.get("/:pid", async (req, res, next) => {
+  const pId = req.params.pid;
+  const product = await controller.getProduct(pId);
+  if (typeof product === "string")
+    return next(new CustomError(errorDictionary.ID_NOT_FOUND));
 
-    res.status(200).send({ status: "OK", data: product });
-  } catch (err) {
-    res.status(404).send({ status: "ERR", data: err.message });
-  }
+  res.status(200).send({ status: "OK", data: product });
 });
 
-router.post("/", handlePolicies(["ADMIN"]), async (req, res) => {
-  try {
-    const newProduct = req.body;
-    const productAdded = await controller.addProduct(newProduct);
-    res.status(200).send({
-      status: "OK",
-      data: `Product added with ID: ${productAdded._id}`,
-    });
-  } catch (err) {
-    res.status(400).send({ status: "ERR", data: err.message });
-  }
+router.post("/", async (req, res, next) => {
+  if (
+    !req.body.title ||
+    !req.body.description ||
+    !req.body.code ||
+    !req.body.price ||
+    !req.body.stock ||
+    !req.body.category ||
+    !req.body.status
+  )
+    return next(new CustomError(errorDictionary.FEW_PARAMETERS));
+
+  const newProduct = req.body;
+  const productAdded = await controller.addProduct(newProduct);
+  res.status(200).send({
+    status: "OK",
+    data: `Product added with ID: ${productAdded._id}`,
+  });
 });
 
-router.put("/:pid", async (req, res) => {
-  try {
-    const pId = req.params.pid;
-    const productUpdate = req.body;
+router.put("/:pid", async (req, res, next) => {
+  if (req.body.status === undefined)
+    return next(new CustomError(errorDictionary.FEW_PARAMETERS));
 
-    await controller.updateProduct(pId, productUpdate);
+  const pId = req.params.pid;
+  const productUpdate = req.body;
 
-    res
-      .status(200)
-      .send({ status: "OK", data: `product with ID: ${pId} has updated` });
-  } catch (error) {
-    res.status(400).send({ status: "ERR", data: error.message });
-  }
+  await controller.updateProduct(pId, productUpdate);
+
+  res
+    .status(200)
+    .send({ status: "OK", data: `product with ID: ${pId} has updated` });
 });
 
-router.delete("/:pid", handlePolicies(["ADMIN"]), async (req, res) => {
+router.delete("/:pid", async (req, res) => {
   try {
     const pId = req.params.pid;
 
